@@ -1,35 +1,39 @@
 <?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["register"])) {
     $servername = "localhost";
     $username = "root";
     $password = "";
     $dbname = "admin_dashboard";
 
-    try {
-        $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        $username = $_POST['username'];
-        $email = $_POST['email'];
-        $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-
-        $sql = "INSERT INTO users (username, email, password) VALUES (:username, :email, :password)";
-        $query = $conn->prepare($sql);
-        $query->bindParam(':username', $username);
-        $query->bindParam(':email', $email);
-        $query->bindParam(':password', $password);
-        $query->execute();
-
-        $conn = null;
-
-        echo "User registered successfully!";
-    } catch (PDOException $e) {
-        echo "Error: " . $e->getMessage();
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
     }
+
+    $username = $_POST['username'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $repeat_password = $_POST['repeat_password'];
+
+    // เช็คความตรงกันของรหัสผ่าน
+    if ($password !== $repeat_password) {
+        echo "Passwords do not match.";
+        exit;
+    }
+
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+    $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$hashed_password')";
+
+    if ($conn->query($sql) === TRUE) {
+        echo "User registered successfully.";
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    }
+
+    $conn->close();
 }
 ?>
-
-
 
 
 <!DOCTYPE html>
@@ -54,7 +58,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 </head>
 
-
 <body class="bg-gradient-primary">
 
     <div class="container">
@@ -69,34 +72,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="text-center">
                                 <h1 class="h4 text-gray-900 mb-4">Create an Account!</h1>
                             </div>
-                            <form class="user" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                            <form class="user" action="register.php" method="post">
                                 <div class="form-group row">
                                     <div class="col-sm-6 mb-3 mb-sm-0">
-                                        <input type="text" class="form-control form-control-user" name="username" placeholder="Username">
+                                        <input type="text" class="form-control form-control-user" id="username" placeholder="Username">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <input type="email" class="form-control form-control-user" name="email" placeholder="Email Address">
+                                    <input type="email" class="form-control form-control-user" id="exampleInputEmail" placeholder="Email Address">
                                 </div>
                                 <div class="form-group row">
                                     <div class="col-sm-6 mb-3 mb-sm-0">
-                                        <input type="password" class="form-control form-control-user" name="password" placeholder="Password">
+                                        <input type="password" class="form-control form-control-user" id="exampleInputPassword" placeholder="Password">
                                     </div>
                                     <div class="col-sm-6">
-                                        <input type="password" class="form-control form-control-user" name="repeat_password" placeholder="Repeat Password">
+                                        <input type="password" class="form-control form-control-user" id="exampleRepeatPassword" placeholder="Repeat Password">
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary btn-user btn-block">
+                                <a href="login.html" class="btn btn-primary btn-user btn-block">
                                     Register Account
-                                </button>
+                                </a>
                             </form>
 
                             <hr>
                             <div class="text-center">
-                                <a class="small" href="forgot-password.php">Forgot Password?</a>
+                                <a class="small" href="forgot-password.html">Forgot Password?</a>
                             </div>
                             <div class="text-center">
-                                <a class="small" href="login.php">Already have an account? Login!</a>
+                                <a class="small" href="login.html">Already have an account? Login!</a>
                             </div>
                         </div>
                     </div>
